@@ -13,7 +13,10 @@
         <p>
           <strong>{{ post.user.first_name }} {{ post.user.last_name }}</strong> 
           <small>{{ post.date_posted|naturaltime }}</small>
-          
+            {% if post.user.is_active %}
+              <a href="{% url 'block_user' post.user.id %}"><span class="tag is-warning">Block</span></a>
+            {% endif %}
+
           <br>
           {{ post.text }} - Times reported: {{ post.times_reported }}
         </p> 

@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import logout as django_logout
+from django.contrib.auth import get_user_model ,logout as django_logout
 from django.conf import settings
 from django.db.models import Count
 from django.contrib.auth.decorators import login_required, permission_required
 
 from .forms import PostForm
-from .models import Post, Report
+from .models import Post, Report, User
 
 from datetime import datetime
 
@@ -50,6 +50,22 @@ def hide_post(request, post_id):
     return redirect('reports')
 
 
+@permission_required('feedapp.change_user', raise_exception=True)
+def block_user(request, user_id):
+    User = get_user_model()
+    user = User.objects.get(id=user_id)
+
+    for post in user.post_set.all():
+        if not post.hidden:
+            post.hidden = True
+            post.date_hidden = datetime.now()
+            post.hidden_by = request.user 
+            post.save()
+
+    user.is_active = False
+    user.save()
+    return redirect('reports')
+
 def report_post(request, post_id):
     post = Post.objects.get(id=post_id)
 
@@ -70,6 +86,3 @@ def logout(request):
 
 
 
-    # <!-- {% if post.user.is_active %}
-    #         <a href="{% url 'block_user' post.user.id %}"><span class="tag is-warning">Block</span></a>
-    #       {% endif %} -->
